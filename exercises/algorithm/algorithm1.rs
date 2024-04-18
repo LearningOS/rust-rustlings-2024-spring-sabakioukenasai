@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -56,11 +55,11 @@ impl<T> LinkedList<T> {
         self.length += 1;
     }
 
-    pub fn get(&mut self, index: i32) -> Option<&T> {
+    pub fn get(&mut self, index: u32) -> Option<&T> {
         self.get_ith_node(self.start, index)
     }
 
-    fn get_ith_node(&mut self, node: Option<NonNull<Node<T>>>, index: i32) -> Option<&T> {
+    fn get_ith_node(&mut self, node: Option<NonNull<Node<T>>>, index: u32) -> Option<&T> {
         match node {
             None => None,
             Some(next_ptr) => match index {
@@ -69,14 +68,41 @@ impl<T> LinkedList<T> {
             },
         }
     }
+
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+        where T: std::cmp::PartialOrd + Clone
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut merge_list = LinkedList::new();
+        let mut cura = list_a.start;
+        let mut curb = list_b.start;
+
+        while cura.is_some() || curb.is_some() {
+            let cura_val = cura.map(|ptr| unsafe {&(*ptr.as_ptr()).val});
+            let curb_val = curb.map(|ptr| unsafe {&(*ptr.as_ptr()).val});
+
+            match (cura_val, curb_val) {
+                (Some(aval), Some(bval)) => {
+                    if aval <= bval {
+                        merge_list.add(aval.clone());
+                        cura = unsafe { (*cura.unwrap().as_ptr()).next };
+                    } else {
+                        merge_list.add(bval.clone());
+                        curb = unsafe { (*curb.unwrap().as_ptr()).next };
+                    }
+                },
+                (None, Some(bval)) => {
+                    merge_list.add(bval.clone());
+                    curb = unsafe { (*curb.unwrap().as_ptr()).next };
+                },
+                (Some(aval), None) => {
+                    merge_list.add(aval.clone());
+                    cura = unsafe { (*cura.unwrap().as_ptr()).next };
+                }
+                (None, None) => break,
+            }
         }
+
+        merge_list
 	}
 }
 
@@ -146,7 +172,7 @@ mod tests {
 		let mut list_c = LinkedList::<i32>::merge(list_a,list_b);
 		println!("merged List is {}", list_c);
 		for i in 0..target_vec.len(){
-			assert_eq!(target_vec[i],*list_c.get(i as i32).unwrap());
+			assert_eq!(target_vec[i],*list_c.get(i as u32).unwrap());
 		}
 	}
 	#[test]
@@ -167,7 +193,7 @@ mod tests {
 		let mut list_c = LinkedList::<i32>::merge(list_a,list_b);
 		println!("merged List is {}", list_c);
 		for i in 0..target_vec.len(){
-			assert_eq!(target_vec[i],*list_c.get(i as i32).unwrap());
+			assert_eq!(target_vec[i],*list_c.get(i as u32).unwrap());
 		}
 	}
 }
